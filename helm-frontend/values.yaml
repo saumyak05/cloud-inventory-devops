@@ -1,0 +1,9 @@
+replicaCount: 1
+image:
+  repository:  899896113877.dkr.ecr.us-east-1.amazonaws.com/frontend
+  tag: v1
+  pullPolicy: Always
+service:
+  type: LoadBalancer
+  port: 80
+

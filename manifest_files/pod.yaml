@@ -1,0 +1,25 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aws-sa
+  namespace: default
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::274519697620:role/test-oidc
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: aws-cli
+  namespace: default
+spec:
+  serviceAccountName: aws-sa
+  containers:
+  - name: aws-cli
+    image: amazon/aws-cli
+    command: [ "/bin/bash", "-c", "--" ]
+    args: [ "while true; do sleep 30; done;" ]
+  tolerations:
+  - operator: Exists
+    effect: NoSchedule
+

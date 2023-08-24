@@ -1,0 +1,58 @@
+pipeline{
+    agent any
+        stages{
+        stage('Code Checkout') {
+            steps {
+                git credentialsId: '6c30c676-c9d8-4668-ae38-0cd43822ed27', 
+                     url: 'https://github.com/koushindrak/CLOUD-INVENTORY-TRACKING-SYSTEM-FRONTEND.git', 
+                     branch: "${BranchName}"
+            }
+        }
+        
+        stage("Build"){
+            steps{
+                script {
+                  env.TAG = sh(script: '\
+                  tag=$(date +%Y%m%d%H%M%S)-${EnvironmentName}-${BranchName} && echo "$tag" \
+                  ', returnStdout: true)
+                  env.IMAGE = sh(script: '\
+                  rawimage=$(docker build -t 899896113877.dkr.ecr.us-east-1.amazonaws.com/frontend:$TAG . 2>&1) \
+                  echo 899896113877.dkr.ecr.us-east-1.amazonaws.com/frontend:$TAG \
+                  ' , returnStdout: true)
+                   
+                }
+            }
+         }
+         
+         
+
+         stage("Upload to ECR"){
+             steps{
+                 script{
+                        def token = sh(returnStdout: true, script: "aws ecr get-login-password --region us-east-1").trim()
+                        sh "echo ${token} | docker login --username AWS \
+                        --password-stdin 899896113877.dkr.ecr.us-east-1.amazonaws.com"
+                        sh "docker push ${IMAGE}"
+                        sh "rm -rf *"
+                  
+                    }
+                }
+         }
+         
+         stage("DEPLOY"){
+                steps {
+                        git credentialsId: '6c30c676-c9d8-4668-ae38-0cd43822ed27', 
+                             url: 'https://github.com/koushindrak/cloud-inventory-devops.git', 
+                             branch: "master"
+                 sh '''
+                 cd helm-frontend
+                 export KUBECONFIG=/var/lib/jenkins/.kube/config
+                 helm upgrade --install frontend . --set image.tag=${TAG}
+                 echo ======== Frontend Application Deployed successfully=========
+                 '''
+                }
+        
+        }
+
+    }
+}

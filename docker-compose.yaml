@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  frontend:
+    image: ecosystem-frontend
+    ports:
+      - 3000:3000
+
+  backend:
+    image: ecosystem-backend
+    ports:
+      - 2612:2612
+    depends_on:
+      - mysql
+    environment:
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root@975686
+
+  mysql:
+    image: mysql:8
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    ports:
+      - 3307:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=root@975686
+      - MYSQL_DATABASE=cloud_inventory
